@@ -1,12 +1,15 @@
 language: go
 
 go:
-  - "1.12"
+  - "1.13"
 
 env:
 - GO111MODULE=on
 
-script: make test
+before_install:
+- make installtools
+
+script: KUBEBUILDER_ASSETS="$(pwd)/tools/bin/" make test
 
 git:
   depth: 1

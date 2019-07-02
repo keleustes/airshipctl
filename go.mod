@@ -3,97 +3,87 @@ module opendev.org/airship/airshipctl
 go 1.13
 
 require (
-	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
-	github.com/Azure/go-autorest/autorest v0.2.0 // indirect
-	github.com/MakeNowJust/heredoc v0.0.0-20171113091838-e9091a26100e // indirect
-	github.com/Microsoft/go-winio v0.4.12 // indirect
-	github.com/Nordix/go-redfish v0.0.0-20191016123452-b7790941aa86
-	github.com/Nordix/go-redfish/client v0.0.0-20191016123452-b7790941aa86
-	github.com/argoproj/argo v2.3.0+incompatible
-	github.com/argoproj/pkg v0.0.0-20190409001913-7e3ef65c8d44 // indirect
-	github.com/blang/semver v3.5.1+incompatible // indirect
-	github.com/chai2010/gettext-go v0.0.0-20170215093142-bf70f2a70fb1 // indirect
-	github.com/colinmarc/hdfs v0.0.0-20180802165501-48eb8d6c34a9 // indirect
-	github.com/coreos/bbolt v1.3.2 // indirect
-	github.com/coreos/etcd v3.3.13+incompatible // indirect
-	github.com/coreos/go-semver v0.3.0 // indirect
-	github.com/coreos/go-systemd v0.0.0-20190321100706-95778dfbb74e // indirect
-	github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f // indirect
-	github.com/daviddengcn/go-colortext v0.0.0-20180409174941-186a3d44e920 // indirect
-	github.com/docker/distribution v0.0.0-20170726174610-edc3ab29cdff // indirect
-	github.com/docker/docker v0.7.3-0.20190327010347-be7ac8be2ae0 // indirect
-	github.com/docker/go-connections v0.3.0 // indirect
-	github.com/docker/go-units v0.3.3 // indirect
-	github.com/docker/libnetwork v0.0.0-20180830151422-a9cd636e3789 // indirect
-	github.com/docker/spdystream v0.0.0-20181023171402-6480d4af844c // indirect
-	github.com/elazarl/goproxy v0.0.0-20190421051319-9d40249d3c2f // indirect
-	github.com/elazarl/goproxy/ext v0.0.0-20190421051319-9d40249d3c2f // indirect
-	github.com/exponent-io/jsonpath v0.0.0-20151013193312-d6023ce2651d // indirect
-	github.com/fatih/camelcase v1.0.0 // indirect
-	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32 // indirect
-	github.com/golang/groupcache v0.0.0-20190129154638-5b532d6fd5ef // indirect
-	github.com/golangplus/bytes v0.0.0-20160111154220-45c989fe5450 // indirect
-	github.com/golangplus/fmt v0.0.0-20150411045040-2a5d6d7d2995 // indirect
-	github.com/golangplus/testing v0.0.0-20180327235837-af21d9c3145e // indirect
-	github.com/google/btree v1.0.0 // indirect
-	github.com/gophercloud/gophercloud v0.1.0 // indirect
-	github.com/gorilla/mux v1.7.2 // indirect
-	github.com/gregjones/httpcache v0.0.0-20190212212710-3befbb6ad0cc // indirect
-	github.com/grpc-ecosystem/go-grpc-middleware v1.0.0 // indirect
-	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
-	github.com/hashicorp/go-uuid v1.0.1 // indirect
-	github.com/imdario/mergo v0.3.7 // indirect
-	github.com/jcmturner/gofork v0.0.0-20190328161633-dc7c13fece03 // indirect
-	github.com/jonboulle/clockwork v0.1.0 // indirect
-	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de // indirect
-	github.com/lithammer/dedent v1.1.0 // indirect
-	github.com/mholt/caddy v1.0.0 // indirect
-	github.com/mitchellh/go-wordwrap v1.0.0 // indirect
-	github.com/morikuni/aec v0.0.0-20170113033406-39771216ff4c // indirect
-	github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f // indirect
-	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
-	github.com/opencontainers/image-spec v1.0.1 // indirect
-	github.com/pborman/uuid v1.2.0 // indirect
-	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
-	github.com/russross/blackfriday v1.5.2 // indirect
-	github.com/sirupsen/logrus v1.4.1 // indirect
-	github.com/soheilhy/cmux v0.1.4 // indirect
-	github.com/spf13/cobra v0.0.3
-	github.com/stretchr/testify v1.3.0
-	github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5 // indirect
-	github.com/valyala/fasttemplate v1.0.1 // indirect
-	github.com/vishvananda/netlink v0.0.0-20171020171820-b2de5d10e38e // indirect
-	github.com/vishvananda/netns v0.0.0-20171111001504-be1fbeda1936 // indirect
-	github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2 // indirect
-	github.com/xlab/handysort v0.0.0-20150421192137-fb3537ed64a1 // indirect
-	go.etcd.io/bbolt v1.3.2 // indirect
-	go.uber.org/atomic v1.4.0 // indirect
-	go.uber.org/multierr v1.1.0 // indirect
-	go.uber.org/zap v1.10.0 // indirect
-	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45 // indirect
-	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4 // indirect
-	gopkg.in/jcmturner/aescts.v1 v1.0.1 // indirect
-	gopkg.in/jcmturner/dnsutils.v1 v1.0.1 // indirect
-	gopkg.in/jcmturner/goidentity.v2 v2.0.0 // indirect
-	gopkg.in/jcmturner/gokrb5.v5 v5.3.0 // indirect
-	gopkg.in/jcmturner/rpc.v0 v0.0.2 // indirect
-	gotest.tools v2.2.0+incompatible // indirect
-	k8s.io/api v0.0.0-20190516230258-a675ac48af67 // indirect
-	k8s.io/apiextensions-apiserver v0.0.0-20190516231611-bf6753f2aa24 // indirect
-	k8s.io/apimachinery v0.0.0-20190404173353-6a84e37a896d
-	k8s.io/apiserver v0.0.0-20190516230822-f89599b3f645 // indirect
-	k8s.io/cli-runtime v0.0.0-20190516231937-17bc0b7fcef5 // indirect
-	k8s.io/client-go v11.0.1-0.20190516230509-ae8359b20417+incompatible
-	k8s.io/cloud-provider v0.0.0-20190516232619-2bf8e45c8454 // indirect
-	k8s.io/cluster-bootstrap v0.0.0-20190516232516-d7d78ab2cfe7 // indirect
-	k8s.io/component-base v0.0.0-20190516230545-9b07ebd4193b // indirect
-	k8s.io/kube-proxy v0.0.0-20190516232141-b2acb7b92548 // indirect
-	k8s.io/kubelet v0.0.0-20190516232236-412e4380c1a8 // indirect
-	k8s.io/kubernetes v1.14.2
-	k8s.io/metrics v0.0.0-20190516231729-8b83d5daaa8f // indirect
-	k8s.io/utils v0.0.0-20190529001817-6999998975a7 // indirect
-	sigs.k8s.io/kustomize v2.0.3+incompatible // indirect
-	sigs.k8s.io/kustomize/v3 v3.2.0
+	github.com/Masterminds/semver v1.5.0
+	github.com/Masterminds/sprig v2.22.0+incompatible
+	github.com/Nordix/go-redfish v0.0.0-20191016124000-fd2ad07270c9
+	github.com/Nordix/go-redfish/client v0.0.0-20191016124000-fd2ad07270c9
+	github.com/Sirupsen/logrus v0.0.0-00010101000000-000000000000 // indirect
+	github.com/argoproj/argo v0.0.0-00010101000000-000000000000
+	github.com/argoproj/argo-rollouts v0.5.0
+	github.com/davecgh/go-spew v1.1.1
+	github.com/evanphx/json-patch v4.5.0+incompatible
+	github.com/ghodss/yaml v1.0.1-0.20180820084758-c7ce16629ff4
+	github.com/golang/protobuf v1.3.2
+	github.com/gosuri/uitable v0.0.3
+	github.com/keleustes/armada-crd v1.16.2-keleustes.20191102
+	github.com/keleustes/capi-yaml-gen v1.16.2-keleustes.20191102
+	github.com/openshift/api v0.0.0-20190322043348-8741ff068a47
+	github.com/pkg/errors v0.8.1
+	github.com/spf13/cobra v0.0.5
+	github.com/spf13/pflag v1.0.5
+	github.com/stretchr/testify v1.4.0
+	golang.org/x/crypto v0.0.0-20191002192127-34f69633bfdc
+	golang.org/x/time v0.0.0-20190921001708-c4c64cad1fd0
+	google.golang.org/grpc v1.24.0
+	istio.io/istio v0.0.0-20191009042236-b4e86c385016
+	k8s.io/api v0.0.0
+	k8s.io/apiextensions-apiserver v0.0.0
+	k8s.io/apimachinery v0.0.0
+	k8s.io/cli-runtime v0.0.0
+	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
+	k8s.io/helm v2.14.3+incompatible
+	k8s.io/klog v1.0.0
+	k8s.io/kubectl v0.0.0
+	k8s.io/kubernetes v1.16.2
+	k8s.io/utils v0.0.0-20190923111123-69764acb6e8e
+	sigs.k8s.io/cluster-api v0.3.0
+	sigs.k8s.io/cluster-api-provider-baremetal v0.0.0-00010101000000-000000000000
+	sigs.k8s.io/cluster-api-provider-openstack v0.0.0-00010101000000-000000000000
+	sigs.k8s.io/controller-runtime v0.3.0
+	sigs.k8s.io/kustomize/api v1.16.2
 	sigs.k8s.io/yaml v1.1.0
-	vbom.ml/util v0.0.0-20180919145318-efcd4e0f9787 // indirect
+)
+
+replace (
+	github.com/Azure/go-autorest => github.com/Azure/go-autorest v12.0.0+incompatible
+	github.com/Azure/go-autorest/autorest => github.com/Azure/go-autorest v13.0.1-0.20190815170712-85d9c035382e+incompatible
+	github.com/Azure/go-autorest/autorest/adal => github.com/Azure/go-autorest v13.0.1-0.20190816223009-243e2a3d5e75+incompatible
+	github.com/Azure/go-autorest/autorest/date => github.com/Azure/go-autorest v13.0.1-0.20190816215130-5bd9621f41a0+incompatible
+	github.com/Azure/go-autorest/autorest/mocks => github.com/Azure/go-autorest v13.0.1-0.20190816215130-5bd9621f41a0+incompatible
+
+	github.com/Sirupsen/logrus => github.com/sirupsen/logrus v1.4.1
+
+	github.com/argoproj/argo => github.com/keleustes/argo v1.16.2-keleustes.20191102
+	github.com/colinmarc/hdfs => github.com/colinmarc/hdfs v0.0.0-20180802165501-48eb8d6c34a9
+	github.com/ghodss/yaml => github.com/ghodss/yaml v0.0.0-20180820084758-c7ce16629ff4
+
+	k8s.io/api => k8s.io/api v0.0.0-20191016110408-35e52d86657a
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20191016113550-5357c4baaf65
+	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20191004115801-a2eda9f80ab8
+	k8s.io/apiserver => k8s.io/apiserver v0.0.0-20191016112112-5190913f932d
+	k8s.io/cli-runtime => k8s.io/cli-runtime v0.0.0-20191016114015-74ad18325ed5
+	k8s.io/client-go => k8s.io/client-go v0.0.0-20191016111102-bec269661e48
+	k8s.io/cloud-provider => k8s.io/cloud-provider v0.0.0-20191016115326-20453efc2458
+	k8s.io/cluster-bootstrap => k8s.io/cluster-bootstrap v0.0.0-20191016115129-c07a134afb42
+	k8s.io/code-generator => k8s.io/code-generator v0.0.0-20191004115455-8e001e5d1894
+	k8s.io/component-base => k8s.io/component-base v0.0.0-20191016111319-039242c015a9
+	k8s.io/cri-api => k8s.io/cri-api v0.0.0-20190828162817-608eb1dad4ac
+	k8s.io/csi-translation-lib => k8s.io/csi-translation-lib v0.0.0-20191016115521-756ffa5af0bd
+	k8s.io/helm => github.com/keleustes/helm v1.16.2-keleustes.20191102
+	k8s.io/kube-aggregator => k8s.io/kube-aggregator v0.0.0-20191016112429-9587704a8ad4
+	k8s.io/kube-controller-manager => k8s.io/kube-controller-manager v0.0.0-20191016114939-2b2b218dc1df
+	k8s.io/kube-proxy => k8s.io/kube-proxy v0.0.0-20191016114407-2e83b6f20229
+	k8s.io/kube-scheduler => k8s.io/kube-scheduler v0.0.0-20191016114748-65049c67a58b
+	k8s.io/kubectl => k8s.io/kubectl v0.0.0-20191016120415-2ed914427d51
+	k8s.io/kubelet => k8s.io/kubelet v0.0.0-20191016114556-7841ed97f1b2
+	k8s.io/legacy-cloud-providers => k8s.io/legacy-cloud-providers v0.0.0-20191016115753-cf0698c3a16b
+	k8s.io/metrics => k8s.io/metrics v0.0.0-20191016113814-3b1a734dba6e
+	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.0.0-20191016112829-06bb3c9d77c9
+
+	sigs.k8s.io/cluster-api => github.com/keleustes/cluster-api v1.16.2-keleustes.20191102
+	sigs.k8s.io/cluster-api-provider-aws => github.com/keleustes/cluster-api-provider-aws v1.16.2-keleustes.20191102
+	sigs.k8s.io/cluster-api-provider-baremetal => github.com/keleustes/cluster-api-provider-baremetal v1.16.2-keleustes.20191102
+	sigs.k8s.io/cluster-api-provider-openstack => github.com/keleustes/cluster-api-provider-openstack v1.16.2-keleustes.20191102
+	sigs.k8s.io/controller-runtime => github.com/keleustes/controller-runtime v1.16.2-keleustes.20191102
+	sigs.k8s.io/kustomize/api => github.com/keleustes/kustomize/api v1.16.2-keleustes.20191102
 )

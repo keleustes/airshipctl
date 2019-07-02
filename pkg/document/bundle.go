@@ -4,17 +4,18 @@ import (
 	"fmt"
 	"io"
 
-	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/v3/k8sdeps/transformer"
-	"sigs.k8s.io/kustomize/v3/k8sdeps/validator"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
-	"sigs.k8s.io/kustomize/v3/pkg/loader"
-	"sigs.k8s.io/kustomize/v3/pkg/plugins"
-	"sigs.k8s.io/kustomize/v3/pkg/resmap"
-	"sigs.k8s.io/kustomize/v3/pkg/resource"
-	"sigs.k8s.io/kustomize/v3/pkg/target"
-	"sigs.k8s.io/kustomize/v3/pkg/types"
+	"sigs.k8s.io/kustomize/api/filesys"
+	"sigs.k8s.io/kustomize/api/k8sdeps/kunstruct"
+	"sigs.k8s.io/kustomize/api/k8sdeps/transformer"
+	"sigs.k8s.io/kustomize/api/k8sdeps/validator"
+	fLdr "sigs.k8s.io/kustomize/api/loader"
+	"sigs.k8s.io/kustomize/api/pgmconfig"
+	pLdr "sigs.k8s.io/kustomize/api/plugins/loader"
+	"sigs.k8s.io/kustomize/api/resid"
+	"sigs.k8s.io/kustomize/api/resmap"
+	"sigs.k8s.io/kustomize/api/resource"
+	"sigs.k8s.io/kustomize/api/target"
+	"sigs.k8s.io/kustomize/api/types"
 
 	utilyaml "opendev.org/airship/airshipctl/pkg/util/yaml"
 )
@@ -23,7 +24,7 @@ import (
 type KustomizeBuildOptions struct {
 	KustomizationPath string
 	OutputPath        string
-	LoadRestrictor    loader.LoadRestrictorFunc
+	LoadRestrictor    fLdr.LoadRestrictorFunc
 	OutOrder          int
 }
 
@@ -31,7 +32,7 @@ type KustomizeBuildOptions struct {
 type BundleFactory struct {
 	KustomizeBuildOptions
 	resmap.ResMap
-	fs.FileSystem
+	filesys.FileSystem
 }
 
 // Bundle interface provides the specification for a bundle implementation
@@ -41,8 +42,8 @@ type Bundle interface {
 	SetKustomizeResourceMap(resmap.ResMap) error
 	GetKustomizeBuildOptions() KustomizeBuildOptions
 	SetKustomizeBuildOptions(KustomizeBuildOptions) error
-	SetFileSystem(fs.FileSystem) error
-	GetFileSystem() fs.FileSystem
+	SetFileSystem(filesys.FileSystem) error
+	GetFileSystem() filesys.FileSystem
 	Select(selector types.Selector) ([]Document, error)
 	GetByGvk(string, string, string) ([]Document, error)
 	GetByName(string) (Document, error)
@@ -54,12 +55,12 @@ type Bundle interface {
 // NewBundle is a convenience function to create a new bundle
 // Over time, it will evolve to support allowing more control
 // for kustomize plugins
-func NewBundle(fSys fs.FileSystem, kustomizePath string, outputPath string) (Bundle, error) {
+func NewBundle(fSys filesys.FileSystem, kustomizePath string, outputPath string) (Bundle, error) {
 
 	var options = KustomizeBuildOptions{
 		KustomizationPath: kustomizePath,
 		OutputPath:        outputPath,
-		LoadRestrictor:    loader.RestrictionRootOnly,
+		LoadRestrictor:    fLdr.RestrictionRootOnly,
 		OutOrder:          0,
 	}
 
@@ -76,16 +77,16 @@ func NewBundle(fSys fs.FileSystem, kustomizePath string, outputPath string) (Bun
 	rf := resmap.NewFactory(resource.NewFactory(uf), pf)
 	v := validator.NewKustValidator()
 
-	pluginConfig := plugins.DefaultPluginConfig()
-	pl := plugins.NewLoader(pluginConfig, rf)
+	pluginConfig := pgmconfig.DefaultPluginConfig()
+	pl := pLdr.NewLoader(pluginConfig, rf)
 
-	ldr, err := loader.NewLoader(
-		bundle.GetKustomizeBuildOptions().LoadRestrictor, v, bundle.GetKustomizeBuildOptions().KustomizationPath, fSys)
+	ldr, err := fLdr.NewLoader(
+		bundle.GetKustomizeBuildOptions().LoadRestrictor, bundle.GetKustomizeBuildOptions().KustomizationPath, fSys)
 	if err != nil {
 		return bundle, err
 	}
 	defer ldr.Cleanup()
-	kt, err := target.NewKustTarget(ldr, rf, pf, pl)
+	kt, err := target.NewKustTarget(ldr, v, rf, pf, pl)
 	if err != nil {
 		return bundle, err
 	}
@@ -127,13 +128,13 @@ func (b *BundleFactory) SetKustomizeBuildOptions(k KustomizeBuildOptions) error 
 }
 
 // SetFileSystem sets the filesystem that will be used by this bundle
-func (b *BundleFactory) SetFileSystem(fSys fs.FileSystem) error {
+func (b *BundleFactory) SetFileSystem(fSys filesys.FileSystem) error {
 	b.FileSystem = fSys
 	return nil
 }
 
 // GetFileSystem gets the filesystem that will be used by this bundle
-func (b *BundleFactory) GetFileSystem() fs.FileSystem {
+func (b *BundleFactory) GetFileSystem() filesys.FileSystem {
 	return b.FileSystem
 }
 
@@ -220,7 +221,7 @@ func (b *BundleFactory) GetByLabel(label string) ([]Document, error) {
 func (b *BundleFactory) GetByGvk(group, version, kind string) ([]Document, error) {
 
 	// Construct kustomize gvk object
-	g := gvk.Gvk{Group: group, Version: version, Kind: kind}
+	g := resid.Gvk{Group: group, Version: version, Kind: kind}
 
 	// pass it to the selector
 	selector := types.Selector{Gvk: g}

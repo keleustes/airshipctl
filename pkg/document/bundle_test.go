@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
-	"sigs.k8s.io/kustomize/v3/pkg/types"
+	"sigs.k8s.io/kustomize/api/resid"
+	"sigs.k8s.io/kustomize/api/types"
 
 	"opendev.org/airship/airshipctl/pkg/document"
 	"opendev.org/airship/airshipctl/testutil"
@@ -83,7 +83,7 @@ func TestBundleDocumentFiltering(t *testing.T) {
 		// Select* tests test the Kustomize selector, which requires we build Kustomize
 		// selector objects which is useful for advanced searches that
 		// need to stack filters
-		g := gvk.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}
+		g := resid.Gvk{Group: "apps", Version: "v1", Kind: "Deployment"}
 		selector := types.Selector{Gvk: g}
 		docs, err := bundle.Select(selector)
 		if err != nil {

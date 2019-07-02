@@ -5,20 +5,19 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
-
+        "github.com/stretchr/testify/require"
 	"opendev.org/airship/airshipctl/pkg/document"
+
+	"sigs.k8s.io/kustomize/api/filesys"
 )
 
 // SetupTestFs help manufacture a fake file system for testing purposes. It
 // will iterate over the files in fixtureDir, which is a directory relative
 // to the tests themselves, and will write each of those files (preserving
 // names) to an in-memory file system and return that fs
-func SetupTestFs(t *testing.T, fixtureDir string) fs.FileSystem {
-	t.Helper()
+func SetupTestFs(t *testing.T, fixtureDir string) filesys.FileSystem {
 
-	x := fs.MakeFakeFS()
+	x := filesys.MakeFsInMemory()
 
 	files, err := ioutil.ReadDir(fixtureDir)
 	require.NoError(t, err, "Failed to read fixture directory, setting up testfs failed")

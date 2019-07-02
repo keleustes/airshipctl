@@ -1,2 +1,16 @@
 Interactions with Kubernetes cluster, such as get status, deploy initial infrastructure
 
+Usage:
+  cluster [command]
+
+Available Commands:
+  alpha       Alpha/Experimental features
+  create      Create a cluster API resource
+  delete      Delete a cluster API resource
+  help        Help about any command
+  validate    Validate an API resource created by cluster API.
+
+Flags:
+  -h, --help   help for cluster
+
+Use "cluster [command] --help" for more information about a command.

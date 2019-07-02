@@ -4,34 +4,22 @@ import (
 	"fmt"
 	"io"
 
-	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/v3/k8sdeps/transformer"
-	"sigs.k8s.io/kustomize/v3/k8sdeps/validator"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
-	"sigs.k8s.io/kustomize/v3/pkg/loader"
-	"sigs.k8s.io/kustomize/v3/pkg/plugins"
-	"sigs.k8s.io/kustomize/v3/pkg/resmap"
-	"sigs.k8s.io/kustomize/v3/pkg/resource"
-	"sigs.k8s.io/kustomize/v3/pkg/target"
-	"sigs.k8s.io/kustomize/v3/pkg/types"
+	"sigs.k8s.io/kustomize/api/filesys"
+	"sigs.k8s.io/kustomize/api/konfig"
+	"sigs.k8s.io/kustomize/api/krusty"
+	"sigs.k8s.io/kustomize/api/resid"
+	"sigs.k8s.io/kustomize/api/resmap"
+	"sigs.k8s.io/kustomize/api/resource"
+	"sigs.k8s.io/kustomize/api/types"
 
 	utilyaml "opendev.org/airship/airshipctl/pkg/util/yaml"
 )
 
-// KustomizeBuildOptions contain the options for running a Kustomize build on a bundle
-type KustomizeBuildOptions struct {
-	KustomizationPath string
-	OutputPath        string
-	LoadRestrictor    loader.LoadRestrictorFunc
-	OutOrder          int
-}
-
 // BundleFactory contains the objects within a bundle
 type BundleFactory struct {
-	KustomizeBuildOptions
+	krusty.Options
 	resmap.ResMap
-	fs.FileSystem
+	filesys.FileSystem
 }
 
 // Bundle interface provides the specification for a bundle implementation
@@ -39,10 +27,10 @@ type Bundle interface {
 	Write(out io.Writer) error
 	GetKustomizeResourceMap() resmap.ResMap
 	SetKustomizeResourceMap(resmap.ResMap) error
-	GetKustomizeBuildOptions() KustomizeBuildOptions
-	SetKustomizeBuildOptions(KustomizeBuildOptions) error
-	SetFileSystem(fs.FileSystem) error
-	GetFileSystem() fs.FileSystem
+	GetKrustyOptions() krusty.Options
+	SetKrustyOptions(krusty.Options) error
+	SetFileSystem(filesys.FileSystem) error
+	GetFileSystem() filesys.FileSystem
 	Select(selector types.Selector) ([]Document, error)
 	GetByGvk(string, string, string) ([]Document, error)
 	GetByName(string) (Document, error)
@@ -54,13 +42,13 @@ type Bundle interface {
 // NewBundle is a convenience function to create a new bundle
 // Over time, it will evolve to support allowing more control
 // for kustomize plugins
-func NewBundle(fSys fs.FileSystem, kustomizePath string, outputPath string) (Bundle, error) {
+func NewBundle(fSys filesys.FileSystem, kustomizePath string, outputPath string) (Bundle, error) {
 
-	var options = KustomizeBuildOptions{
-		KustomizationPath: kustomizePath,
-		OutputPath:        outputPath,
-		LoadRestrictor:    loader.RestrictionRootOnly,
-		OutOrder:          0,
+	var opts = &krusty.Options{
+		RerorderTransformer: "none",
+		LoadRestrictions:    types.LoadRestrictionsRootOnly,
+		DoPrune:             false,
+		PluginConfig:        konfig.DisabledPluginConfig(),
 	}
 
 	// init an empty bundle factory
@@ -68,30 +56,12 @@ func NewBundle(fSys fs.FileSystem, kustomizePath string, outputPath string) (Bun
 
 	// set the fs and build options we will use
 	bundle.SetFileSystem(fSys)
-	bundle.SetKustomizeBuildOptions(options)
+	bundle.SetKrustyOptions(*opts)
 
 	// boiler plate to allow us to run Kustomize build
-	uf := kunstruct.NewKunstructuredFactoryImpl()
-	pf := transformer.NewFactoryImpl()
-	rf := resmap.NewFactory(resource.NewFactory(uf), pf)
-	v := validator.NewKustValidator()
-
-	pluginConfig := plugins.DefaultPluginConfig()
-	pl := plugins.NewLoader(pluginConfig, rf)
-
-	ldr, err := loader.NewLoader(
-		bundle.GetKustomizeBuildOptions().LoadRestrictor, v, bundle.GetKustomizeBuildOptions().KustomizationPath, fSys)
-	if err != nil {
-		return bundle, err
-	}
-	defer ldr.Cleanup()
-	kt, err := target.NewKustTarget(ldr, rf, pf, pl)
-	if err != nil {
-		return bundle, err
-	}
-
 	// build a resource map of kustomize rendered objects
-	m, err := kt.MakeCustomizedResMap()
+	k := krusty.MakeKustomizer(fSys, opts)
+	m, err := k.Run(kustomizePath)
 	bundle.SetKustomizeResourceMap(m)
 	if err != nil {
 		return bundle, err
@@ -113,27 +83,27 @@ func (b *BundleFactory) SetKustomizeResourceMap(r resmap.ResMap) error {
 	return nil
 }
 
-// GetKustomizeBuildOptions returns the build options object used to generate the resource map
+// GetKrustyOptions returns the build options object used to generate the resource map
 // for this bundle
-func (b *BundleFactory) GetKustomizeBuildOptions() KustomizeBuildOptions {
-	return b.KustomizeBuildOptions
+func (b *BundleFactory) GetKrustyOptions() krusty.Options {
+	return b.Options
 }
 
-// SetKustomizeBuildOptions sets the build options to be used for this bundle. In
+// SetKrustyOptions sets the build options to be used for this bundle. In
 // the future, it may perform some basic validations.
-func (b *BundleFactory) SetKustomizeBuildOptions(k KustomizeBuildOptions) error {
-	b.KustomizeBuildOptions = k
+func (b *BundleFactory) SetKrustyOptions(k krusty.Options) error {
+	b.Options = k
 	return nil
 }
 
 // SetFileSystem sets the filesystem that will be used by this bundle
-func (b *BundleFactory) SetFileSystem(fSys fs.FileSystem) error {
+func (b *BundleFactory) SetFileSystem(fSys filesys.FileSystem) error {
 	b.FileSystem = fSys
 	return nil
 }
 
 // GetFileSystem gets the filesystem that will be used by this bundle
-func (b *BundleFactory) GetFileSystem() fs.FileSystem {
+func (b *BundleFactory) GetFileSystem() filesys.FileSystem {
 	return b.FileSystem
 }
 
@@ -220,7 +190,7 @@ func (b *BundleFactory) GetByLabel(label string) ([]Document, error) {
 func (b *BundleFactory) GetByGvk(group, version, kind string) ([]Document, error) {
 
 	// Construct kustomize gvk object
-	g := gvk.Gvk{Group: group, Version: version, Kind: kind}
+	g := resid.Gvk{Group: group, Version: version, Kind: kind}
 
 	// pass it to the selector
 	selector := types.Selector{Gvk: g}

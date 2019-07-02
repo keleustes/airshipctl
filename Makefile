@@ -1,13 +1,25 @@
 SHELL := /bin/bash
 
 GO_FLAGS            := -ldflags '-extldflags "-static"' -tags=netgo
+GOPATH              := ${GOPATH}
 
+# Directories.
 BINDIR              := bin
 EXECUTABLE_CLI      := airshipctl
-TOOLBINDIR          := tools/bin
+
+TOOLS_DIR           := tools
+TOOLSBINDIR         := $(TOOLS_DIR)/bin
+MANIFEST_ROOT       ?= config
+CRD_ROOT            ?= $(MANIFEST_ROOT)/crd/bases
+
+# Binaries.
+CONTROLLER_GEN      := $(TOOLSBINDIR)/controller-gen
+LINTER              := $(TOOLSBINDIR)/golangci-lint
+MOCKGEN             := $(TOOLSBINDIR)/mockgen
+CONVERSION_GEN      := $(TOOLSBINDIR)/conversion-gen
+KUBEBUILDER         := $(TOOLSBINDIR)/kubebuilder
 
 # linting
-LINTER              := $(TOOLBINDIR)/golangci-lint
 LINTER_CONFIG       := .golangci.yaml
 
 # docker
@@ -28,34 +40,71 @@ TEST_FLAGS          ?=
 COVER_FLAGS         ?=
 COVER_PROFILE       ?= cover.out
 
-# proxy options
-PROXY               ?= http://proxy.foo.com:8000
-NO_PROXY            ?= localhost,127.0.0.1,.svc.cluster.local
-USE_PROXY           ?= false
-
-# Sphinx document options
-PYTHON_EXECUTABLE   := python
-SPHINXBUILD         ?= sphinx-build
-SOURCEDIR           = docs/source
-BUILDDIR            = docs/build
-REQUIREMENTSTXT     := docs/requirements.txt
-
-# Godoc server options
-GD_GOROOT           ?= /usr/lib/go  # Godoc has trouble with symbolic links, some may need to use /usr/share/go
-GD_PORT             ?= 8080
-
-.PHONY: depend
-depend:
+.PHONY: get-modules
+get-modules:
 	@go mod download
+	cd $(TOOLS_DIR); go mod download
+
+.PHONY: modules
+modules: ## Runs go mod to ensure modules are up to date.
+	go mod tidy
+	cd $(TOOLS_DIR); go mod tidy
+
+## --------------------------------------
+## Generate
+## --------------------------------------
+
+.PHONY: generate-manifests
+generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.
+	$(CONTROLLER_GEN) crd \
+		paths=$(GOPATH)/src/sigs.k8s.io/cluster-api/api/v1alpha2/... \
+		crd:trivialVersions=true \
+		output:crd:dir=$(CRD_ROOT) \
+		output:stdout
+	$(CONTROLLER_GEN) crd \
+		paths=$(GOPATH)/src/sigs.k8s.io/cluster-api-provider-baremetal/api/v1alpha2/... \
+		crd:trivialVersions=true \
+		output:crd:dir=$(CRD_ROOT) \
+		output:stdout
+	$(CONTROLLER_GEN) crd \
+		paths=$(GOPATH)/src/sigs.k8s.io/cluster-api-bootstrap-provider-kubeadm/api/v1alpha2/... \
+		crd:trivialVersions=true \
+		output:crd:dir=$(CRD_ROOT) \
+		output:stdout
+
+## --------------------------------------
+## Binaries
+## --------------------------------------
 
 .PHONY: build
-build: depend
+build: get-modules
 	@CGO_ENABLED=0 go build -o $(BINDIR)/$(EXECUTABLE_CLI) $(GO_FLAGS)
 
-.PHONY: install
-install: depend
-install:
-	@CGO_ENABLED=0 go install .
+## --------------------------------------
+## Tooling Binaries
+## --------------------------------------
+
+$(CONTROLLER_GEN): $(TOOLS_DIR)/go.mod # Build controller-gen from tools folder.
+	cd $(TOOLS_DIR); go build -tags=tools -o $(BINDIR)/controller-gen sigs.k8s.io/controller-tools/cmd/controller-gen
+
+$(GOLANGCI_LINT): $(TOOLS_DIR)/go.mod # Build golangci-lint from tools folder.
+	cd $(TOOLS_DIR); go build -tags=tools -o $(BINDIR)/golangci-lint github.com/golangci/golangci-lint/cmd/golangci-lint
+
+$(MOCKGEN): $(TOOLS_DIR)/go.mod # Build mockgen from tools folder.
+	cd $(TOOLS_DIR); go build -tags=tools -o $(BINDIR)/mockgen github.com/golang/mock/mockgen
+
+$(CONVERSION_GEN): $(TOOLS_DIR)/go.mod
+	cd $(TOOLS_DIR); go build -tags=tools -o $(BINDIR)/conversion-gen k8s.io/code-generator/cmd/conversion-gen
+
+$(KUBEBUILDER): $(TOOLS_DIR)/go.mod
+	cd $(TOOLS_DIR); ./install_kubebuilder.sh
+
+.PHONY: installtools
+installtools: $(KUBEBUILDER) $(GOLANGCI_LINT)
+
+## --------------------------------------
+## Testing
+## --------------------------------------
 
 .PHONY: test
 test: build
@@ -73,14 +122,10 @@ cover: COVER_FLAGS = -covermode=atomic -coverprofile=$(COVER_PROFILE)
 cover: unit-tests
 	@./tools/coverage_check $(COVER_PROFILE)
 
-.PHONY: fmt
-fmt: lint
-
 .PHONY: lint
 lint: tidy
 lint: $(LINTER)
 	@echo "Performing linting step..."
-	@./tools/whitespace_linter
 	@./$(LINTER) run --config $(LINTER_CONFIG)
 	@echo "Linting completed successfully"
 
@@ -90,29 +135,9 @@ tidy:
 	@./tools/gomod_check
 	@echo "go.mod is up to date"
 
-.PHONY: images
-images: docker-image
-
 .PHONY: docker-image
 docker-image:
-ifeq ($(USE_PROXY), true)
-	@docker build . --network=host \
-		--build-arg http_proxy=$(PROXY) \
-		--build-arg https_proxy=$(PROXY) \
-		--build-arg HTTP_PROXY=$(PROXY) \
-		--build-arg HTTPS_PROXY=$(PROXY) \
-		--build-arg no_proxy=$(NO_PROXY) \
-		--build-arg NO_PROXY=$(NO_PROXY) \
-	    --build-arg MAKE_TARGET=$(DOCKER_MAKE_TARGET) \
-	    --tag $(DOCKER_IMAGE) \
-	    --target $(DOCKER_TARGET_STAGE)
-else
-	@docker build . --network=host \
-	    --build-arg MAKE_TARGET=$(DOCKER_MAKE_TARGET) \
-	    --tag $(DOCKER_IMAGE) \
-	    --target $(DOCKER_TARGET_STAGE)
-endif
-
+	@docker build . --build-arg MAKE_TARGET=$(DOCKER_MAKE_TARGET) --tag $(DOCKER_IMAGE) --target $(DOCKER_TARGET_STAGE)
 
 .PHONY: print-docker-image-tag
 print-docker-image-tag:
@@ -135,21 +160,6 @@ clean:
 
 .PHONY: docs
 docs:
-	@$(PYTHON_EXECUTABLE) -m venv venv
-	source ./venv/bin/activate
-	@$(PYTHON_EXECUTABLE) -m pip install -r ${REQUIREMENTSTXT}
-	@$(SPHINXBUILD) "$(SOURCEDIR)" "$(BUILDDIR)"
-	rm -rf venv
-
-.PHONY: godoc
-godoc:
-	@go get golang.org/x/tools
-	@go install golang.org/x/tools/cmd/godoc
-	@echo "Follow this link to package documentation: http://localhost:${GD_PORT}/pkg/opendev.org/airship/airshipctl/"
-	@godoc -http=":${GD_PORT}" -goroot ${GD_GOROOT}
-
-.PHONY: releasenotes
-releasenotes:
 	@echo "TODO"
 
 $(TOOLBINDIR):
@@ -167,4 +177,4 @@ update-golden: unit-tests
 # The delete-golden target is a utility for update-golden
 .PHONY: delete-golden
 delete-golden:
-	@find . -type f -name "*.golden" -delete
+	@find cmd -type f -name "*.golden" -delete

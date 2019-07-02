@@ -15,7 +15,7 @@ import (
 	"opendev.org/airship/airshipctl/pkg/log"
 	"opendev.org/airship/airshipctl/pkg/util"
 
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/api/filesys"
 )
 
 const (
@@ -48,7 +48,7 @@ func GenerateBootstrapIso(settings *environment.AirshipCTLSettings, args []strin
 
 	// TODO (dukov) replace with the appropriate function once it's available
 	// in document module
-	docBundle, err := document.NewBundle(fs.MakeRealFS(), manifest.TargetPath, "")
+	docBundle, err := document.NewBundle(filesys.MakeFsOnDisk(), manifest.TargetPath, "")
 	if err != nil {
 		return err
 	}

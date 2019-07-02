@@ -4,8 +4,12 @@ Usage:
   cluster [command]
 
 Available Commands:
+  alpha       Alpha/Experimental features
+  create      Create a cluster API resource
+  delete      Delete a cluster API resource
   help        Help about any command
   initinfra   deploy initinfra components to cluster
+  validate    Validate an API resource created by cluster API.
 
 Flags:
   -h, --help   help for cluster

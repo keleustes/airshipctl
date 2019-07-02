@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	fixtures "gopkg.in/src-d/go-git-fixtures.v3"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
+	"sigs.k8s.io/kustomize/api/filesys"
 
 	"opendev.org/airship/airshipctl/pkg/document"
 )
@@ -20,7 +20,7 @@ import (
 func SetupTestFs(t *testing.T, fixtureDir string) document.FileSystem {
 	t.Helper()
 
-	x := &document.DocumentFs{FileSystem: fs.MakeFakeFS()}
+	x := &document.DocumentFs{FileSystem: filesys.MakeFsInMemory()}
 
 	files, err := ioutil.ReadDir(fixtureDir)
 	require.NoErrorf(t, err, "Failed to read fixture directory %s", fixtureDir)

@@ -5,11 +5,16 @@ Usage:
 
 Available Commands:
   bootstrap   Bootstrap ephemeral Kubernetes cluster
+  calico      calico configuration and data viewer
+  ceph        ceph configuration and data viewer
   cluster     Control Kubernetes cluster
   completion  Generate autocompletions script for the specified shell (bash or zsh)
   config      Modify airshipctl config files
   document    manages deployment documents
+  helm        The Helm package manager for Kubernetes.
   help        Help about any command
+  openstack   openstack configuration and data viewer
+  prometheus  prometheus configuration and data viewer
   secret      manages secrets
   version     Show the version number of airshipctl
 

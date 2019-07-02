@@ -1,0 +1,33 @@
+package kfctl
+
+const (
+	DefaultNamespace = "kubeflow"
+	// TODO: find the latest tag dynamically
+	DefaultVersion         = "master"
+	KfConfigFile           = "app.yaml"
+	KustomizationFile      = "kustomization.yaml"
+	KustomizationParamFile = "params.env"
+	DefaultCacheDir        = ".cache"
+	KubeflowRepoName       = "kubeflow"
+	ManifestsRepoName      = "manifests"
+	KubeflowRepo           = "kubeflow"
+	ManifestsRepo          = "manifests"
+	DefaultConfigDir       = "bootstrap/config"
+	DefaultZone            = "us-east1-d"
+	DefaultGkeApiVer       = "v1beta1"
+	DefaultAppLabel        = "app.kubernetes.io/name"
+	DefaultAppVersion      = "app.kubernetes.io/version"
+	DefaultAppType         = "kubeflow"
+	KUBEFLOW_USERNAME      = "KUBEFLOW_USERNAME"
+	KUBEFLOW_PASSWORD      = "KUBEFLOW_PASSWORD"
+	DefaultSwaggerFile     = "bootstrap/k8sSpec/v1.11.7/api/openapi-spec/swagger.json"
+	YamlSeparator          = "(?m)^---[ \t]*$"
+)
+
+type ResourceEnum string
+
+const (
+	ALL      ResourceEnum = "all"
+	K8S      ResourceEnum = "k8s"
+	PLATFORM ResourceEnum = "platform"
+)

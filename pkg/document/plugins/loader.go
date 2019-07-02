@@ -17,9 +17,8 @@ limitations under the License.
 package plugins
 
 import (
-	"sigs.k8s.io/kustomize/v3/pkg/ifc"
-	"sigs.k8s.io/kustomize/v3/pkg/resid"
-	"sigs.k8s.io/kustomize/v3/pkg/resmap"
+	"sigs.k8s.io/kustomize/api/resid"
+	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/yaml"
 )
 
@@ -34,7 +33,7 @@ type TransformerLoader struct {
 
 // Config reads plugin configuration structure
 func (l *TransformerLoader) Config(
-	ldr ifc.Loader, rf *resmap.Factory, c []byte) error {
+	helper *resmap.PluginHelpers, c []byte) error {
 	if err := yaml.Unmarshal(c, l); err != nil {
 		return err
 	}
@@ -42,7 +41,7 @@ func (l *TransformerLoader) Config(
 	if !found {
 		return ErrUnknownPlugin{Kind: l.Kind}
 	}
-	return airshipPlugin.Config(ldr, rf, c)
+	return airshipPlugin.Config(helper, c)
 }
 
 // Transform executes Transform method of an external plugin

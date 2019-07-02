@@ -1,13 +1,25 @@
 SHELL := /bin/bash
 
 GO_FLAGS            := -ldflags '-extldflags "-static"' -tags=netgo
+GOPATH              := ${GOPATH}
 
+# Directories.
 BINDIR              := bin
 EXECUTABLE_CLI      := airshipctl
-TOOLBINDIR          := tools/bin
+
+TOOLS_DIR           := tools
+TOOLSBINDIR         := $(TOOLS_DIR)/bin
+MANIFEST_ROOT       ?= config
+CRD_ROOT            ?= $(MANIFEST_ROOT)/crd/bases
+
+# Binaries.
+CONTROLLER_GEN      := $(TOOLSBINDIR)/controller-gen
+LINTER              := $(TOOLSBINDIR)/golangci-lint
+MOCKGEN             := $(TOOLSBINDIR)/mockgen
+CONVERSION_GEN      := $(TOOLSBINDIR)/conversion-gen
+KUBEBUILDER         := $(TOOLSBINDIR)/kubebuilder
 
 # linting
-LINTER              := $(TOOLBINDIR)/golangci-lint
 LINTER_CONFIG       := .golangci.yaml
 
 # docker
@@ -44,18 +56,74 @@ REQUIREMENTSTXT     := docs/requirements.txt
 # Godoc server options
 GD_PORT             ?= 8080
 
-.PHONY: depend
-depend:
+# .PHONY: depend
+# depend:
+
+.PHONY: get-modules
+get-modules:
 	@go mod download
+	cd $(TOOLS_DIR); go mod download
+
+.PHONY: modules
+modules: ## Runs go mod to ensure modules are up to date.
+	go mod tidy
+	cd $(TOOLS_DIR); go mod tidy
+
+## --------------------------------------
+## Generate
+## --------------------------------------
+
+.PHONY: generate-manifests
+generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.
+	$(CONTROLLER_GEN) crd \
+		paths=$(GOPATH)/src/sigs.k8s.io/cluster-api/api/v1alpha2/... \
+		crd:trivialVersions=true \
+		output:crd:dir=$(CRD_ROOT) \
+		output:stdout
+	$(CONTROLLER_GEN) crd \
+		paths=$(GOPATH)/src/sigs.k8s.io/cluster-api-provider-baremetal/api/v1alpha2/... \
+		crd:trivialVersions=true \
+		output:crd:dir=$(CRD_ROOT) \
+		output:stdout
+	$(CONTROLLER_GEN) crd \
+		paths=$(GOPATH)/src/sigs.k8s.io/cluster-api-bootstrap-provider-kubeadm/api/v1alpha2/... \
+		crd:trivialVersions=true \
+		output:crd:dir=$(CRD_ROOT) \
+		output:stdout
+
+## --------------------------------------
+## Binaries
+## --------------------------------------
 
 .PHONY: build
-build: depend
+build: get-modules
 	@CGO_ENABLED=0 go build -o $(BINDIR)/$(EXECUTABLE_CLI) $(GO_FLAGS)
 
-.PHONY: install
-install: depend
-install:
-	@CGO_ENABLED=0 go install .
+## --------------------------------------
+## Tooling Binaries
+## --------------------------------------
+
+$(CONTROLLER_GEN): $(TOOLS_DIR)/go.mod # Build controller-gen from tools folder.
+	cd $(TOOLS_DIR); go build -tags=tools -o $(BINDIR)/controller-gen sigs.k8s.io/controller-tools/cmd/controller-gen
+
+$(GOLANGCI_LINT): $(TOOLS_DIR)/go.mod # Build golangci-lint from tools folder.
+	cd $(TOOLS_DIR); go build -tags=tools -o $(BINDIR)/golangci-lint github.com/golangci/golangci-lint/cmd/golangci-lint
+
+$(MOCKGEN): $(TOOLS_DIR)/go.mod # Build mockgen from tools folder.
+	cd $(TOOLS_DIR); go build -tags=tools -o $(BINDIR)/mockgen github.com/golang/mock/mockgen
+
+$(CONVERSION_GEN): $(TOOLS_DIR)/go.mod
+	cd $(TOOLS_DIR); go build -tags=tools -o $(BINDIR)/conversion-gen k8s.io/code-generator/cmd/conversion-gen
+
+$(KUBEBUILDER): $(TOOLS_DIR)/go.mod
+	cd $(TOOLS_DIR); ./install_kubebuilder.sh
+
+.PHONY: installtools
+installtools: $(KUBEBUILDER) $(GOLANGCI_LINT)
+
+## --------------------------------------
+## Testing
+## --------------------------------------
 
 .PHONY: test
 test: build
@@ -73,14 +141,10 @@ cover: COVER_FLAGS = -covermode=atomic -coverprofile=$(COVER_PROFILE)
 cover: unit-tests
 	@./tools/coverage_check $(COVER_PROFILE)
 
-.PHONY: fmt
-fmt: lint
-
 .PHONY: lint
 lint: tidy
 lint: $(LINTER)
 	@echo "Performing linting step..."
-	@./tools/whitespace_linter
 	@./$(LINTER) run --config $(LINTER_CONFIG)
 	@# NOTE(howell): golangci-lint uses and embedded golint, but if we use it, it
 	@# will cause gate failures. For now, we'll install golint alongside
@@ -95,9 +159,6 @@ tidy:
 	@echo "Checking that go.mod is up to date..."
 	@./tools/gomod_check
 	@echo "go.mod is up to date"
-
-.PHONY: images
-images: docker-image
 
 .PHONY: docker-image
 docker-image:
@@ -121,7 +182,6 @@ endif
 ifeq ($(PUBLISH), true)
 	@docker push $(DOCKER_IMAGE)
 endif
-
 
 .PHONY: print-docker-image-tag
 print-docker-image-tag:

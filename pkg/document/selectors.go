@@ -3,8 +3,8 @@ package document
 import (
 	"strings"
 
-	"sigs.k8s.io/kustomize/v3/pkg/gvk"
-	"sigs.k8s.io/kustomize/v3/pkg/types"
+	"sigs.k8s.io/kustomize/api/resid"
+	"sigs.k8s.io/kustomize/api/types"
 )
 
 // Selector provides abstraction layer in front of kustomize selector
@@ -18,7 +18,7 @@ func NewSelector() Selector {
 }
 
 // Following set of functions allows to build selector object
-// by name, gvk, label selector and annotation selector
+// by name, resid, label selector and annotation selector
 
 // ByName select by name
 func (s Selector) ByName(name string) Selector {
@@ -32,15 +32,15 @@ func (s Selector) ByNamespace(namespace string) Selector {
 	return s
 }
 
-// ByGvk select by gvk
+// ByGvk select by resid
 func (s Selector) ByGvk(group, version, kind string) Selector {
-	s.Gvk = gvk.Gvk{Group: group, Version: version, Kind: kind}
+	s.Gvk = resid.Gvk{Group: group, Version: version, Kind: kind}
 	return s
 }
 
 // ByKind select by Kind
 func (s Selector) ByKind(kind string) Selector {
-	s.Gvk = gvk.Gvk{Kind: kind}
+	s.Gvk = resid.Gvk{Kind: kind}
 	return s
 }
 

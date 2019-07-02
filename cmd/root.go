@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"io"
+	"math/rand"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -9,10 +11,15 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"opendev.org/airship/airshipctl/cmd/bootstrap"
+	"opendev.org/airship/airshipctl/cmd/calico"
+	"opendev.org/airship/airshipctl/cmd/ceph"
 	"opendev.org/airship/airshipctl/cmd/cluster"
 	"opendev.org/airship/airshipctl/cmd/completion"
 	"opendev.org/airship/airshipctl/cmd/config"
 	"opendev.org/airship/airshipctl/cmd/document"
+	"opendev.org/airship/airshipctl/cmd/helm"
+	"opendev.org/airship/airshipctl/cmd/openstack"
+	"opendev.org/airship/airshipctl/cmd/prometheus"
 	"opendev.org/airship/airshipctl/cmd/secret"
 	"opendev.org/airship/airshipctl/pkg/environment"
 	"opendev.org/airship/airshipctl/pkg/log"
@@ -27,6 +34,8 @@ func NewAirshipCTLCommand(out io.Writer) (*cobra.Command, *environment.AirshipCT
 // NewRootCmd creates the root `airshipctl` command. All other commands are
 // subcommands branching from this one
 func NewRootCmd(out io.Writer) (*cobra.Command, *environment.AirshipCTLSettings, error) {
+	rand.Seed(time.Now().UnixNano())
+
 	settings := &environment.AirshipCTLSettings{}
 	rootCmd := &cobra.Command{
 		Use:           "airshipctl",
@@ -39,6 +48,7 @@ func NewRootCmd(out io.Writer) (*cobra.Command, *environment.AirshipCTLSettings,
 			// Load or Initialize airship Config
 			settings.InitConfig()
 		},
+		// BashCompletionFunction: bashCompletionFunc,
 	}
 	rootCmd.SetOut(out)
 	rootCmd.AddCommand(NewVersionCommand())
@@ -57,6 +67,15 @@ func AddDefaultAirshipCTLCommands(cmd *cobra.Command, settings *environment.Airs
 	cmd.AddCommand(document.NewDocumentCommand(settings))
 	cmd.AddCommand(config.NewConfigCommand(settings))
 	cmd.AddCommand(secret.NewSecretCommand())
+	// cmd.AddCommand(kubectl.NewDefaultKubectlCommand())
+	cmd.AddCommand(helm.NewHelmCommand(settings))
+	cmd.AddCommand(openstack.NewOpenStackCommand(settings))
+	cmd.AddCommand(prometheus.NewPrometheusCommand(settings))
+	cmd.AddCommand(ceph.NewCephCommand(settings))
+	cmd.AddCommand(calico.NewCalicoCommand(settings))
+
+	// Should we use cmd.OutOrStdout?
+	//cmd.AddCommand(kubeadm.NewKubeadmCommand(os.Stdin, os.Stdout, os.Stderr))
 
 	return cmd
 }

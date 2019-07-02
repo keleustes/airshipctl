@@ -1,29 +1,25 @@
 package document
 
 import (
-	"errors"
+	// "errors"
 	"fmt"
 	"io"
 
-	"sigs.k8s.io/kustomize/v3/k8sdeps/kunstruct"
-	"sigs.k8s.io/kustomize/v3/k8sdeps/transformer"
-	"sigs.k8s.io/kustomize/v3/k8sdeps/validator"
-	"sigs.k8s.io/kustomize/v3/pkg/loader"
-	"sigs.k8s.io/kustomize/v3/pkg/plugins"
-	"sigs.k8s.io/kustomize/v3/pkg/resmap"
-	"sigs.k8s.io/kustomize/v3/pkg/resource"
-	"sigs.k8s.io/kustomize/v3/pkg/target"
-	"sigs.k8s.io/kustomize/v3/pkg/types"
+	"sigs.k8s.io/kustomize/api/krusty"
+	"sigs.k8s.io/kustomize/api/loader"
+	"sigs.k8s.io/kustomize/api/resmap"
+	"sigs.k8s.io/kustomize/api/resource"
+	"sigs.k8s.io/kustomize/api/types"
 
-	docplugins "opendev.org/airship/airshipctl/pkg/document/plugins"
-	"opendev.org/airship/airshipctl/pkg/log"
+	// "opendev.org/airship/airshipctl/pkg/log"
+	// docplugins "opendev.org/airship/airshipctl/pkg/document/plugins"
 	utilyaml "opendev.org/airship/airshipctl/pkg/util/yaml"
 )
 
 func init() {
 	// NOTE (dukov) This is sort of a hack but it's the only way to add an
 	// external 'builtin' plugin to Kustomize
-	plugins.TransformerFactories[plugins.Unknown] = docplugins.NewTransformerLoader
+	// builtinhelpers.TransformerFactories[builtinhelpers.Unknown] = docplugins.NewTransformerLoader
 }
 
 // KustomizeBuildOptions contain the options for running a Kustomize build on a bundle
@@ -36,7 +32,7 @@ type KustomizeBuildOptions struct {
 
 // BundleFactory contains the objects within a bundle
 type BundleFactory struct {
-	KustomizeBuildOptions
+	krusty.Options
 	resmap.ResMap
 	FileSystem
 }
@@ -44,6 +40,10 @@ type BundleFactory struct {
 // Bundle interface provides the specification for a bundle implementation
 type Bundle interface {
 	Write(out io.Writer) error
+	GetKustomizeResourceMap() resmap.ResMap
+	SetKustomizeResourceMap(resmap.ResMap) error
+	GetKrustyOptions() krusty.Options
+	SetKrustyOptions(krusty.Options) error
 	SetFileSystem(FileSystem) error
 	GetFileSystem() FileSystem
 	Select(selector Selector) ([]Document, error)
@@ -66,52 +66,24 @@ func NewBundleByPath(rootPath string) (Bundle, error) {
 // Over time, it will evolve to support allowing more control
 // for kustomize plugins
 func NewBundle(fSys FileSystem, kustomizePath string, outputPath string) (Bundle, error) {
-	var options = KustomizeBuildOptions{
-		KustomizationPath: kustomizePath,
-		OutputPath:        outputPath,
-		LoadRestrictor:    loader.RestrictionRootOnly,
-		OutOrder:          0,
+	var opts = &krusty.Options{
+		RerorderTransformer: "none",
+		LoadRestrictions:    types.LoadRestrictionsRootOnly,
+		DoPrune:             false,
+		// PluginConfig:        konfig.DisabledPluginConfig(),
 	}
 
 	// init an empty bundle factory
 	bundle := &BundleFactory{}
 
 	// set the fs and build options we will use
-	if err := bundle.SetFileSystem(fSys); err != nil {
-		return nil, err
-	}
-	if err := bundle.SetKustomizeBuildOptions(options); err != nil {
-		return nil, err
-	}
-
-	// boiler plate to allow us to run Kustomize build
-	uf := kunstruct.NewKunstructuredFactoryImpl()
-	pf := transformer.NewFactoryImpl()
-	rf := resmap.NewFactory(resource.NewFactory(uf), pf)
-	v := validator.NewKustValidator()
-
-	pluginConfig := plugins.DefaultPluginConfig()
-	pl := plugins.NewLoader(pluginConfig, rf)
-
-	ldr, err := loader.NewLoader(
-		bundle.GetKustomizeBuildOptions().LoadRestrictor, v, bundle.GetKustomizeBuildOptions().KustomizationPath, fSys)
-	if err != nil {
-		return bundle, err
-	}
-
-	defer func() {
-		if e := ldr.Cleanup(); e != nil {
-			log.Fatal("failed to cleanup loader ERROR: ", e)
-		}
-	}()
-
-	kt, err := target.NewKustTarget(ldr, rf, pf, pl)
-	if err != nil {
-		return bundle, err
-	}
+	bundle.SetFileSystem(fSys)
+	bundle.SetKrustyOptions(*opts)
 
 	// build a resource map of kustomize rendered objects
-	m, err := kt.MakeCustomizedResMap()
+	k := krusty.MakeKustomizer(fSys, opts)
+	m, err := k.Run(kustomizePath)
+	bundle.SetKustomizeResourceMap(m)
 	if err != nil {
 		return bundle, err
 	}
@@ -132,16 +104,16 @@ func (b *BundleFactory) SetKustomizeResourceMap(r resmap.ResMap) error {
 	return nil
 }
 
-// GetKustomizeBuildOptions returns the build options object used to generate the resource map
+// GetKrustyOptions returns the build options object used to generate the resource map
 // for this bundle
-func (b *BundleFactory) GetKustomizeBuildOptions() KustomizeBuildOptions {
-	return b.KustomizeBuildOptions
+func (b *BundleFactory) GetKrustyOptions() krusty.Options {
+	return b.Options
 }
 
-// SetKustomizeBuildOptions sets the build options to be used for this bundle. In
+// SetKrustyOptions sets the build options to be used for this bundle. In
 // the future, it may perform some basic validations.
-func (b *BundleFactory) SetKustomizeBuildOptions(k KustomizeBuildOptions) error {
-	b.KustomizeBuildOptions = k
+func (b *BundleFactory) SetKrustyOptions(k krusty.Options) error {
+	b.Options = k
 	return nil
 }
 
@@ -238,9 +210,9 @@ func (b *BundleFactory) SelectBundle(selector Selector) (Bundle, error) {
 	// return a new bundle with the same options and filesystem
 	// as this one but with a reduced resourceMap
 	return &BundleFactory{
-		KustomizeBuildOptions: b.KustomizeBuildOptions,
-		ResMap:                resourceMap,
-		FileSystem:            b.FileSystem,
+		Options:    b.GetKrustyOptions(),
+		ResMap:     resourceMap,
+		FileSystem: b.FileSystem,
 	}, nil
 }
 
@@ -299,19 +271,19 @@ func (b *BundleFactory) SelectBundle(selector Selector) (Bundle, error) {
 //         somefield: "someValue"
 func (b *BundleFactory) SelectByFieldValue(path string, condition func(interface{}) bool) (Bundle, error) {
 	result := &BundleFactory{
-		KustomizeBuildOptions: b.KustomizeBuildOptions,
-		FileSystem:            b.FileSystem,
+		Options:    b.GetKrustyOptions(),
+		FileSystem: b.FileSystem,
 	}
 	resourceMap := resmap.New()
 	for _, res := range b.Resources() {
 		val, err := res.GetFieldValue(path)
 		if err != nil {
-			if errors.As(err, &types.NoFieldError{}) {
-				// this resource doesn't have the specified field - skip it
-				continue
-			} else {
-				return nil, err
-			}
+			// if errors.As(err, &types.NoFieldError{}) {
+			// this resource doesn't have the specified field - skip it
+			// continue
+			// } else {
+			return nil, err
+			// }
 		}
 
 		if condition(val) {
@@ -347,6 +319,7 @@ func (b *BundleFactory) GetByLabel(labelSelector string) ([]Document, error) {
 func (b *BundleFactory) GetByGvk(group, version, kind string) ([]Document, error) {
 	// Construct kustomize gvk object
 	selector := NewSelector().ByGvk(group, version, kind)
+
 	// pass it to the selector
 	return b.Select(selector)
 }

@@ -58,7 +58,7 @@ install:
 	@CGO_ENABLED=0 go install .
 
 .PHONY: test
-test: lint
+test: build
 test: cover
 
 .PHONY: unit-tests

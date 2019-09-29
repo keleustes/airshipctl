@@ -38,7 +38,7 @@ build: get-modules
 	@CGO_ENABLED=0 go build -o $(BINDIR)/$(EXECUTABLE_CLI) $(GO_FLAGS)
 
 .PHONY: test
-test: lint
+test: build
 test: cover
 
 .PHONY: unit-tests

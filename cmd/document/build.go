@@ -15,6 +15,7 @@ import (
 	"sigs.k8s.io/kustomize/api/pgmconfig"
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
+	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/yaml"
 )
 
@@ -23,7 +24,6 @@ type Options struct {
 	kustomizationPath string
 	outputPath        string
 	outOrder          reorderOutput
-	pluginsEnabled    bool
 }
 
 // NewOptions creates a Options object
@@ -73,9 +73,6 @@ func NewCmdBuild(out io.Writer) *cobra.Command {
 		&o.outputPath,
 		"output", "o", "",
 		"If specified, write the build output to this path.")
-	krusty.AddFlagLoadRestrictor(cmd.Flags())
-	pgmconfig.AddFlagEnablePlugins(
-		cmd.Flags(), &o.pluginsEnabled)
 	addFlagReorderOutput(cmd.Flags())
 	cmd.AddCommand(NewCmdBuildPrune(out))
 	return cmd
@@ -95,19 +92,17 @@ func (o *Options) Validate(args []string) (err error) {
 	} else {
 		o.kustomizationPath = args[0]
 	}
-	err = krusty.ValidateFlagLoadRestrictor()
-	if err != nil {
-		return err
-	}
 	o.outOrder, err = validateFlagReorderOutput()
 	return
 }
 
 func (o *Options) makeOptions() *krusty.Options {
-	opts := krusty.MakeDefaultOptions()
-	opts.LoadRestrictions = krusty.GetFlagLoadRestrictorValue()
-	opts.RerorderTransformer = o.outOrder.String()
-	opts.PluginConfig.Enabled = o.pluginsEnabled
+	opts := &krusty.Options{
+		RerorderTransformer: o.outOrder.String(),
+		LoadRestrictions:    types.LoadRestrictionsRootOnly,
+		DoPrune:             false,
+		PluginConfig:        pgmconfig.DisabledPluginConfig(),
+	}
 	return opts
 }
 

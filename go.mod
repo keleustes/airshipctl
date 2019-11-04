@@ -85,5 +85,5 @@ replace (
 	sigs.k8s.io/cluster-api-provider-baremetal => github.com/keleustes/cluster-api-provider-baremetal v1.16.2-keleustes.20191102
 	sigs.k8s.io/cluster-api-provider-openstack => github.com/keleustes/cluster-api-provider-openstack v1.16.2-keleustes.20191102
 	sigs.k8s.io/controller-runtime => github.com/keleustes/controller-runtime v1.16.2-keleustes.20191102
-	sigs.k8s.io/kustomize/api => github.com/keleustes/kustomize/api v1.16.2-keleustes.20191102
+	sigs.k8s.io/kustomize/api => github.com/keleustes/kustomize/api v1.16.2-keleustes.20191103
 )

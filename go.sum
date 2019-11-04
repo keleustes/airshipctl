@@ -575,8 +575,8 @@ github.com/keleustes/controller-runtime v1.16.2-keleustes.20191102 h1:LiGlSdA8uC
 github.com/keleustes/controller-runtime v1.16.2-keleustes.20191102/go.mod h1:KIR9ukewTstf6A4ewvCSAg2tarz6cjSHJdjxCBU+YLg=
 github.com/keleustes/helm v1.16.2-keleustes.20191102 h1:9zIuVytml3zgHYUVjuXaeYUBPEyC+OdnFxyDsI/KkTE=
 github.com/keleustes/helm v1.16.2-keleustes.20191102/go.mod h1:VAcuWqtAIBOw9O4sHfOTKmyjJb6v4BHnBCn6FuFqguo=
-github.com/keleustes/kustomize/api v1.16.2-keleustes.20191102 h1:9q1dTNVIE+FVR+G9hlgO+s7KTShoxzTB/1LNxm2EVYA=
-github.com/keleustes/kustomize/api v1.16.2-keleustes.20191102/go.mod h1:bRepbTxpaQWxfEBliCjLfwYwtY7TJeqyiABOwFvxqfA=
+github.com/keleustes/kustomize/api v1.16.2-keleustes.20191103 h1:y03JLDX5Xtv7Eohc1nI/ixs3t+PGUSBR600j+/iWdpM=
+github.com/keleustes/kustomize/api v1.16.2-keleustes.20191103/go.mod h1:uIOxb64EJTr+UNwm6SppuzA3E0h1eXYRDChr0SDvqIA=
 github.com/kevinburke/ssh_config v0.0.0-20190725054713-01f96b0aa0cd/go.mod h1:CT57kijsi8u/K/BOFA39wgDQJ9CxiF4nAY/ojJ6r6mM=
 github.com/keybase/go-crypto v0.0.0-20190416182011-b785b22cc757/go.mod h1:ghbZscTyKdM07+Fw3KSi0hcJm+AlEUWj8QLlPtijN/M=
 github.com/kisielk/errcheck v1.1.0/go.mod h1:EZBBE59ingxPouuu3KfxchcWSUPOHkagtvWXihfKN4Q=

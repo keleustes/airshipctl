@@ -77,7 +77,10 @@ func NewBundle(fSys filesys.FileSystem, kustomizePath string, outputPath string)
 	rf := resmap.NewFactory(resource.NewFactory(uf), pf)
 	v := validator.NewKustValidator()
 
-	pluginConfig := pgmconfig.DefaultPluginConfig()
+	pluginConfig, err := pgmconfig.EnabledPluginConfig()
+	if err != nil {
+		return bundle, err
+	}
 	pl := pLdr.NewLoader(pluginConfig, rf)
 
 	ldr, err := fLdr.NewLoader(
